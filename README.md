@@ -7,7 +7,7 @@
 
   ### How to install and use:
 
-  1. Save the `.ts` file as `~/.commandcode/mods/completion-bell.ts` (personal) or
+  1. Save the `.ts` file as `~/.commandcode/mods/completion-bell.ts` (global) or
   `<project>/.commandcode/mods/completion-bell.ts` (project-level)
   2. Place the WAV file (`anya_say_chichi.wav`) in the same directory
   3. Restart CommandCode — it auto-loads on next session
