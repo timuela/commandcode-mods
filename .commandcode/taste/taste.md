@@ -1,2 +1,0 @@
-- Prefers self-service instructions over repeated assistant attempts when a task requires interactive authentication (e.g., npm 2FA, login prompts). When the assistant hits an auth wall, the user would rather be given the exact steps to run themselves. Confidence: 0.90
-- Prefers documentation (READMEs) to cover multiple installation/usage paths, including alternative/fallback approaches alongside the recommended one — not just a single happy path. Confidence: 0.70
