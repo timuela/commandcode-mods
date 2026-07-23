@@ -1,17 +1,17 @@
 # What this is:
 
   ## completion-bell:
-  Command Code mods that plays a WAV sound file (anya_say_chichi.wav)whenever a command finishes.
+  Command Code mods that plays a WAV sound file (`anya_say_chichi.wav`) whenever a command finishes.
 
   It hooks into the run_end event using the ModApi'sobserver, and uses PowerShell's System.Media.SoundPlayer to play the audio synchronously.
 
   ### How to install and use:
 
-  1. Save the .ts file as ~/.commandcode/mods/completion-bell.ts (personal) or
-  <project>/.commandcode/mods/completion-bell.ts (project-level)
-  2. Place the WAV file (anya_say_chichi.wav) in the same directory
-  3. Restart Command Code — it auto-loads on next session
-  4. Every time a command finishes, you'll hear Anya calling you.
+  1. Save the `.ts` file as `~/.commandcode/mods/completion-bell.ts` (personal) or
+  `<project>/.commandcode/mods/completion-bell.ts` (project-level)
+  2. Place the WAV file (`anya_say_chichi.wav`) in the same directory
+  3. Restart CommandCode — it auto-loads on next session
+  4. Every time a response finishes, you'll hear Anya calling you.
 
   You can also test it immediately without restarting:
 
