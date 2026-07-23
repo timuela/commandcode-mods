@@ -1,24 +1,36 @@
-# What this is:
+# completion-bell
 
-  ## completion-bell:
-  CommandCode mods that plays a WAV sound file (`anya_say_chichi.wav`) whenever a response finishes.
+CommandCode mod that plays a WAV sound file (`anya_say_chichi.wav`) whenever a response finishes.
 
-  It hooks into the run_end event using the ModApi's observer, and uses PowerShell's System.Media.SoundPlayer to play the audio synchronously.
+It hooks into the `run_end` event using the ModApi's observer, and uses PowerShell's `System.Media.SoundPlayer` to play the audio synchronously.
 
-  ### How to install and use:
+## Install
 
-  1. Save the `.ts` file as `~/.commandcode/mods/completion-bell.ts` (global) or
-  `<project>/.commandcode/mods/completion-bell.ts` (project-level)
-  2. Place the WAV file (`anya_say_chichi.wav`) in the same directory
-  3. Restart CommandCode — it auto-loads on next session
-  4. Every time a response finishes, you'll hear Anya calling you.
+### 1. npm (recommended)
 
-  You can also test it immediately without restarting:
+```bash
+cmd mods add npm:cmd-mod-completion-bell -g
+```
 
-  ``cmdc --mod completion-bell.ts``
+### 2. Or Manually
 
-  The WAV file (Anya's "chichi" from Spy x Family) can be swapped for any .wav — just change the filename in `completion-bell.ts`
+1. Save `completion-bell.ts` and `anya_say_chichi.wav` to `~/.commandcode/mods/` (global) or `<project>/.commandcode/mods/` (project-level)
 
-  Also this is Windows-only because of the PowerShell SoundPlayer call.
+Restart CommandCode — it auto-loads on next session
 
-### More info on how to mod: https://commandcode.ai/docs/mods
+You can also test immediately without restarting:
+
+```bash
+cmdc --mod completion-bell.ts
+```
+
+### Swap the sound
+
+Replace `anya_say_chichi.wav` with any `.wav` file — just keep the same filename (or update the constant in `completion-bell.ts`).
+
+## Notes
+
+- **Windows-only** — relies on PowerShell's `System.Media.SoundPlayer`.
+- Every time a response finishes, you'll hear Anya calling you (from Spy x Family).
+
+### More on mods: https://commandcode.ai/docs/mods

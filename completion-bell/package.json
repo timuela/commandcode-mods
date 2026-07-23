@@ -1,0 +1,11 @@
+{
+  "name": "cmd-mod-completion-bell",
+  "version": "1.0.0",
+  "description": "CommandCode mod that plays a WAV sound whenever a response finishes",
+  "author": "Ahmad Awais",
+  "license": "MIT",
+  "keywords": ["commandcode", "commandcode-mod", "completion", "bell", "sound", "notification"],
+  "commandcode": {
+    "mods": ["./completion-bell.ts"]
+  }
+}

@@ -1,10 +1,13 @@
 // @ts-nocheck
 import { execSync } from 'child_process';
-import { homedir } from 'os';
-import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default function (cmd) {
-  const wavPath = join(homedir(), '.commandcode', 'mods', 'anya_say_chichi.wav');
+  const wavPath = join(__dirname, 'anya_say_chichi.wav');
 
   cmd.on('run_end', () => {
     const psCmd = `(New-Object System.Media.SoundPlayer '${wavPath}').PlaySync()`;
