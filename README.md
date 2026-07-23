@@ -21,4 +21,4 @@
 
   Also this is Windows-only because of the PowerShell SoundPlayer call.
 
-# More info on how to mod: https://commandcode.ai/docs/mods
+### More info on how to mod: https://commandcode.ai/docs/mods
