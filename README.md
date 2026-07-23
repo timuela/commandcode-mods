@@ -1,7 +1,7 @@
 # What this is:
 
   ## completion-bell:
-  Command Code mods that plays a WAV sound file (`anya_say_chichi.wav`) whenever a command finishes.
+  CommandCode mods that plays a WAV sound file (`anya_say_chichi.wav`) whenever a command finishes.
 
   It hooks into the run_end event using the ModApi'sobserver, and uses PowerShell's System.Media.SoundPlayer to play the audio synchronously.
 
