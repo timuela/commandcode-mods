@@ -4,7 +4,7 @@ CommandCode mod that plays a WAV sound file (`anya_say_chichi.wav`) whenever the
 
 It hooks the ModApi event stream and rings for:
 
-- **Permission prompts** — a tool call is queued and Command Code is about to ask you to approve it (fires on `tool_queued` in prompting modes: `default`, `plan`, `auto-accept`). Multiple tools in one batch ring once.
+- **Permission prompts** — when a tool call sits on an approval modal for ~5 seconds without being approved or denied, it means you're away — the bell rings to pull you back. If you're already watching and approve, you never hear it.
 - **Questions** — the assistant calls `ask_user_question`, so it's waiting on your answer (rings regardless of permission mode).
 - **Conversation end** — a response finishes (`run_end`).
 - **Errors** — a run fails (`run_error`).
@@ -37,7 +37,11 @@ Replace `anya_say_chichi.wav` with any `.wav` file — just keep the same filena
 
 ### Quiet in auto-approve modes
 
-In `bypass` / `dont-ask` permission modes nothing prompts, so the bell doesn't ring for tool calls — only for questions, completion, and errors.
+In `bypass` / `dont-ask` permission modes nothing prompts, so the bell never rings for tool calls — only for questions, completion, and errors.
+
+### Tuning the prompt-detection window
+
+The permission-prompt bell rings after a queued tool has gone ~5 seconds without starting (or being denied). You can adjust this in `completion-bell.ts` via the `PENDING_CHECK_MS` constant — raise it to be more forgiving, lower it to catch prompts faster.
 
 ## Notes
 

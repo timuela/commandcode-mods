@@ -1,7 +1,7 @@
 {
   "name": "cmd-mod-completion-bell",
-  "version": "1.0.1",
-  "description": "CommandCode mod that plays a WAV sound whenever a response finishes",
+  "version": "1.0.3",
+  "description": "CommandCode mod that plays a WAV sound whenever the assistant needs your attention.",
   "author": "timuela",
   "license": "MIT",
   "keywords": ["commandcode", "commandcode-mod", "completion", "bell", "sound", "notification"],
