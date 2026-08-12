@@ -1,57 +1,50 @@
 // @ts-nocheck
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Permission modes where a tool call pauses for the user before it runs.
-// 'bypass' and 'dont-ask' auto-approve everything, so no prompt ever appears.
-const PROMPTING_MODES = new Set(['default', 'plan', 'auto-accept']);
-
-// Tools whose execution blocks on the user — the assistant is waiting on an
-// answer or an approval right now, so the bell rings instantly, in any mode.
+// Tools that block on the user — the bell rings the moment the model calls them.
 const USER_BLOCKING_TOOLS = new Set([
-  'ask_user_question', // question modal
-  'enter_plan_mode',   // asks the user to confirm entering plan mode
-  'exit_plan_mode',    // asks the user to approve leaving plan mode
-  'plan_review',       // plan approval panel (approve / refine)
+  'ask_user_question',
+  'enter_plan_mode',
+  'exit_plan_mode',
+  'plan_review',
 ]);
 
-// If a queued tool hasn't started running within this window, it's almost
-// certainly sitting on a permission modal — ring to pull the user back.
-// An attentive user approves (and triggers tool_running) well before this.
-const PENDING_CHECK_MS = 5000;
+// Modes where a tool call can pause for a permission prompt.
+const PROMPTING_MODES = new Set(['default', 'plan', 'auto-accept']);
 
-// Don't ring more than once per window — a batch of queued tools that all
-// time out together should produce a single bell.
-const RING_DEBOUNCE_MS = 2000;
+// Ring if a queued tool sits unanswered this long (you're away);
+// approve fast and the bell stays quiet.
+const PENDING_MS = 5000;
+const DEBOUNCE_MS = 2000; // at most one bell per window
 
 export default function (cmd) {
   const wavPath = join(__dirname, 'anya_say_chichi.wav');
-  let permissionMode = 'default'; // updated on permission_mode_changed
+  const pending = new Map(); // toolCallId -> timeout
+  let permissionMode = 'default';
   let lastRingAt = 0;
-  const pending = new Map(); // toolCallId -> timeout handle
 
   const playBell = () => {
-    const psCmd = `(New-Object System.Media.SoundPlayer '${wavPath}').PlaySync()`;
-    exec(`powershell -NoProfile -Command "${psCmd}"`, { stdio: 'ignore' });
+    const escapedPath = wavPath.replace(/'/g, "''");
+    const psCmd = `(New-Object System.Media.SoundPlayer '${escapedPath}').PlaySync()`;
+    spawn('powershell', ['-NoProfile', '-Command', psCmd], { stdio: 'ignore', windowsHide: true });
   };
 
-  const ringDebounced = () => {
+  const ring = () => {
     const now = Date.now();
-    if (now - lastRingAt < RING_DEBOUNCE_MS) return;
+    if (now - lastRingAt < DEBOUNCE_MS) return;
     lastRingAt = now;
     playBell();
   };
 
-  const clearPending = (toolCallId) => {
-    const timer = pending.get(toolCallId);
-    if (timer) {
-      clearTimeout(timer);
-      pending.delete(toolCallId);
-    }
+  const clearPending = (id) => {
+    const timer = pending.get(id);
+    if (timer) clearTimeout(timer);
+    pending.delete(id);
   };
 
   const clearAllPending = () => {
@@ -63,42 +56,40 @@ export default function (cmd) {
     permissionMode = mode;
   });
 
-  // A queued tool that doesn't start means a permission modal is holding the
-  // run — the user is away. Ring once if it's still pending after the window.
-  // User-blocking tools ring on tool_running instead, so skip them here.
+  // Plan approval and question tools fire no tool events (their panels are
+  // TUI-side), so detect the tool_use in the finished message and ring now.
+  cmd.on('message_end', ({ content }) => {
+    const requested = (content ?? []).some(
+      (b) => b?.type === 'tool_use' && USER_BLOCKING_TOOLS.has(b.name)
+    );
+    if (requested) ring();
+  });
+
+  // A queued tool that never starts means a permission prompt is waiting on
+  // you — ring once after the window. Fast approvals never ring.
   cmd.on('tool_queued', ({ toolCallId, toolName }) => {
     if (!PROMPTING_MODES.has(permissionMode)) return;
     if (USER_BLOCKING_TOOLS.has(toolName)) return;
-    const timer = setTimeout(() => {
-      pending.delete(toolCallId);
-      ringDebounced();
-    }, PENDING_CHECK_MS);
-    pending.set(toolCallId, timer);
+    pending.set(
+      toolCallId,
+      setTimeout(() => {
+        pending.delete(toolCallId);
+        ring();
+      }, PENDING_MS)
+    );
   });
 
-  // The tool started — either auto-approved or the user already approved, so
-  // no permission bell needed. User-blocking tools are the exception: their
-  // run blocks on the user (question modal, plan approval), so ring now.
-  cmd.on('tool_running', ({ toolCallId, toolName }) => {
-    clearPending(toolCallId);
-    if (USER_BLOCKING_TOOLS.has(toolName)) ringDebounced();
-  });
-
-  // The user denied — they were present, no bell.
-  cmd.on('tool_denied', ({ toolCallId }) => {
-    clearPending(toolCallId);
-  });
-
-  // A run ended or was interrupted — nothing is waiting anymore.
+  // The tool started or was denied — nothing is waiting on it anymore.
+  cmd.on('tool_running', ({ toolCallId }) => clearPending(toolCallId));
+  cmd.on('tool_denied', ({ toolCallId }) => clearPending(toolCallId));
   cmd.on('interrupted', clearAllPending);
-
-  cmd.on('run_error', () => {
-    clearAllPending();
-    playBell();
-  });
 
   cmd.on('run_end', () => {
     clearAllPending();
-    playBell();
+    ring();
+  });
+  cmd.on('run_error', () => {
+    clearAllPending();
+    ring();
   });
 }
