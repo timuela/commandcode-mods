@@ -5,7 +5,7 @@ CommandCode mod that plays a WAV sound file (`anya_say_chichi.wav`) whenever the
 It hooks the ModApi event stream and rings for:
 
 - **Permission prompts** — when a tool call sits on an approval modal for ~5 seconds without being approved or denied, it means you're away — the bell rings to pull you back. If you're already watching and approve, you never hear it.
-- **Questions** — the assistant calls `ask_user_question`, so it's waiting on your answer (rings regardless of permission mode).
+- **Questions & approvals** — the assistant calls `ask_user_question`, or presents a plan for approval (`enter_plan_mode`, `exit_plan_mode`, `plan_review`). It's waiting on your decision, so the bell rings instantly (regardless of permission mode).
 - **Conversation end** — a response finishes (`run_end`).
 - **Errors** — a run fails (`run_error`).
 

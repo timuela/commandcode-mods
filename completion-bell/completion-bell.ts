@@ -10,6 +10,15 @@ const __dirname = dirname(__filename);
 // 'bypass' and 'dont-ask' auto-approve everything, so no prompt ever appears.
 const PROMPTING_MODES = new Set(['default', 'plan', 'auto-accept']);
 
+// Tools whose execution blocks on the user — the assistant is waiting on an
+// answer or an approval right now, so the bell rings instantly, in any mode.
+const USER_BLOCKING_TOOLS = new Set([
+  'ask_user_question', // question modal
+  'enter_plan_mode',   // asks the user to confirm entering plan mode
+  'exit_plan_mode',    // asks the user to approve leaving plan mode
+  'plan_review',       // plan approval panel (approve / refine)
+]);
+
 // If a queued tool hasn't started running within this window, it's almost
 // certainly sitting on a permission modal — ring to pull the user back.
 // An attentive user approves (and triggers tool_running) well before this.
@@ -56,9 +65,10 @@ export default function (cmd) {
 
   // A queued tool that doesn't start means a permission modal is holding the
   // run — the user is away. Ring once if it's still pending after the window.
+  // User-blocking tools ring on tool_running instead, so skip them here.
   cmd.on('tool_queued', ({ toolCallId, toolName }) => {
     if (!PROMPTING_MODES.has(permissionMode)) return;
-    if (toolName === 'ask_user_question') return; // rings on tool_running instead
+    if (USER_BLOCKING_TOOLS.has(toolName)) return;
     const timer = setTimeout(() => {
       pending.delete(toolCallId);
       ringDebounced();
@@ -67,11 +77,11 @@ export default function (cmd) {
   });
 
   // The tool started — either auto-approved or the user already approved, so
-  // no permission bell needed. ask_user_question is the exception: its run
-  // blocks on the question modal, so the user is waiting on it right now.
+  // no permission bell needed. User-blocking tools are the exception: their
+  // run blocks on the user (question modal, plan approval), so ring now.
   cmd.on('tool_running', ({ toolCallId, toolName }) => {
     clearPending(toolCallId);
-    if (toolName === 'ask_user_question') ringDebounced();
+    if (USER_BLOCKING_TOOLS.has(toolName)) ringDebounced();
   });
 
   // The user denied — they were present, no bell.
